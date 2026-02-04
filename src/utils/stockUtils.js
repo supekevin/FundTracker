@@ -20,7 +20,8 @@ export const guessPrefix = (code) => {
       }
   
       if (code.startsWith('30')) return `sz${code}`; // ChiNext (SZ)
-      if (['15', '16'].some(p => code.startsWith(p))) return `sz${code}`; // LOF/ETF usually SZ (15/16)
+      if (code.startsWith('16')) return [`sz${code}`, `jj${code}`]; // LOF: Check both Market (sz) and Fund (jj)
+      if (code.startsWith('15')) return `sz${code}`; // ETF usually SZ
       if (['83', '87', '43'].some(p => code.startsWith(p))) return `bj${code}`; // Beijing Stock Exchange
       
       // For others (e.g. 11xxxx), default to 'jj' (Open Ended Funds)

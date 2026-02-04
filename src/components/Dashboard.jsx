@@ -267,6 +267,9 @@ const Dashboard = () => {
             <RefreshCw size={24} />
           </button>
         </div>
+        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'right', paddingRight: '0.5rem' }}>
+          💡 00/16开头代码若需区分股票/基金，请加前缀: sz=股票, jj=基金 (如 jj161725)
+        </div>
       </div>
 
       {/* Error Message */}
