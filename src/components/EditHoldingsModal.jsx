@@ -2,15 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Calculator, ArrowRight, Wallet } from 'lucide-react';
 
 const EditHoldingsModal = ({ fund, currentShares, onClose, onSave }) => {
-  const [amount, setAmount] = useState('');
-  
+  // Fix: Initialize state directly from props to avoid useEffect setState
+  const [amount, setAmount] = useState(() => {
+    if (currentShares && fund && fund.nav) {
+      return (currentShares * fund.nav).toFixed(2);
+    }
+    return '';
+  });
+
+  // Optional: Update internal state if props drastically change (rare for modal, but safe pattern)
   useEffect(() => {
      if (currentShares && fund && fund.nav) {
-         setAmount((currentShares * fund.nav).toFixed(2));
-     } else {
-         setAmount('');
+         setAmount(prev => {
+             // Only update if it's empty, otherwise respect user input
+             if (prev === '') return (currentShares * fund.nav).toFixed(2);
+             return prev;
+         });
      }
-  }, [currentShares, fund]);
+  }, [currentShares, fund?.nav]);
 
   if (!fund) return null;
 

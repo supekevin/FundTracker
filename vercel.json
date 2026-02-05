@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/qt/:path*", "destination": "https://qt.gtimg.cn/:path*" },
+    { "source": "/api/em/mob/:path*", "destination": "https://fundmobapi.eastmoney.com/:path*" },
+    { "source": "/api/em/f10/:path*", "destination": "https://fundf10.eastmoney.com/:path*" },
+    { "source": "/api/em/gz/:path*", "destination": "http://fundgz.1234567.com.cn/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

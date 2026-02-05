@@ -6,6 +6,20 @@ import FundDetailsModal from './FundDetailsModal';
 import EditHoldingsModal from './EditHoldingsModal';
 import { fetchFundValuations } from '../services/fundService';
 import { calculateRealtimeEstimate } from '../services/valuationService';
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy
+} from '@dnd-kit/sortable';
 
 // 前缀: sh/sz 用于 A股/基金/ETF, hk 用于港股, jj 用于 开放式基金
 // 示例: sz000001 (平安银行), sh600519 (茅台), hk00700 (腾讯), sz161725 (白酒 LOF)
@@ -209,6 +223,25 @@ const Dashboard = () => {
       return sum + (currentPrice * shares);
   }, 0);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      setCodes((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   return (
     <div className="container">
       {/* Header */}
@@ -281,46 +314,58 @@ const Dashboard = () => {
       )}
 
       {/* Grid */}
-      <div className="grid-cols-3">
-        {codes.map(code => (
-          fundsData[code] ? (
-            <FundCard 
-                key={code} 
-                data={fundsData[code]} 
-                holdings={holdings[code]}
-                onDelete={removeFund} 
-                onClick={() => handleCardClick(fundsData[code])}
-                onEditHoldings={(e) => openHoldingsModal(e, fundsData[code])}
-            />
-          ) : (
-            <div key={code} className="glass-panel" style={{height: '12rem', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'}}>
-               <span style={{color: 'var(--text-secondary)'}}>Loading {code}...</span>
-               <button 
-                  onClick={() => removeFund(code)}
-                  style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    padding: '0.5rem'
-                  }}
-                  title="Remove"
-               >
-                 X
-               </button>
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={closestCenter} 
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid-cols-3">
+          <SortableContext 
+            items={codes} 
+            strategy={rectSortingStrategy}
+          >
+            {codes.map(code => (
+              fundsData[code] ? (
+                <FundCard 
+                    key={code} 
+                    id={code}
+                    data={fundsData[code]} 
+                    holdings={holdings[code]}
+                    onDelete={removeFund} 
+                    onClick={() => handleCardClick(fundsData[code])}
+                    onEditHoldings={(e) => openHoldingsModal(e, fundsData[code])}
+                />
+              ) : (
+                <div key={code} className="glass-panel" style={{height: '12rem', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'}}>
+                   <span style={{color: 'var(--text-secondary)'}}>Loading {code}...</span>
+                   <button 
+                      onClick={() => removeFund(code)}
+                      style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        padding: '0.5rem'
+                      }}
+                      title="Remove"
+                   >
+                     X
+                   </button>
+                </div>
+              )
+            ))}
+          </SortableContext>
+          
+          {codes.length === 0 && (
+            <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '5rem 0', color: 'var(--text-secondary)'}}>
+              <p>暂无关注基金，请在右上角添加。</p>
             </div>
-          )
-        ))}
-        
-        {codes.length === 0 && (
-          <div style={{gridColumn: '1 / -1', textAlign: 'center', padding: '5rem 0', color: 'var(--text-secondary)'}}>
-            <p>暂无关注基金，请在右上角添加。</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </DndContext>
 
 
       <FundDetailsModal 

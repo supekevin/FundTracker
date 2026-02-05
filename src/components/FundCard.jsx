@@ -1,7 +1,22 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Clock, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Trash2, GripVertical } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-const FundCard = ({ data, holdings, onDelete, onClick, onEditHoldings }) => {
+const FundCard = ({ id, data, holdings, onDelete, onClick, onEditHoldings }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const isPositive = parseFloat(data.growthRate) >= 0;
   const growthClass = isPositive ? 'up' : 'down';
   const GrowthIcon = isPositive ? TrendingUp : TrendingDown;
@@ -13,22 +28,46 @@ const FundCard = ({ data, holdings, onDelete, onClick, onEditHoldings }) => {
 
   return (
     <div 
+        ref={setNodeRef}
+        style={{...style, position: 'relative'}}
         className={`glass-panel fund-card animate-in ${data.holdings ? 'cursor-pointer hover:border-sky-500/50' : ''}`}
         onClick={onClick}
-    > {/* Added classes and onClick */}
-      {/* Replaced the old delete button and fund-card-header with the new structure */}
-      <div className="card-header">
+    > 
+      {/* Drag Handle - Absolute Positioned */}
+      <div 
+          {...attributes} 
+          {...listeners} 
+          className="drag-handle"
+          style={{ 
+              position: 'absolute', 
+              top: '8px', 
+              left: '4px', 
+              cursor: 'grab', 
+              color: 'rgba(255,255,255,0.3)', 
+              zIndex: 10,
+              padding: '4px' 
+          }}
+          onClick={(e) => e.stopPropagation()} 
+      >
+          <GripVertical size={20} />
+      </div>
+
+      <div className="card-header" style={{ paddingLeft: '1rem' }}>
         <div>
-          <h2 className="fund-name">{data.name}</h2> {/* Changed h3 to h2 and added class */}
-          <span className="fund-code">
-            {data.code} {data.isEstimated && <span className="text-xs text-amber-500">(预估)</span>} {/* Added conditional indicator */}
-          </span>
+           <h2 className="fund-name">{data.name}</h2> 
+           <span className="fund-code">
+             {data.code} {data.isEstimated && <span className="text-xs text-amber-500">(预估)</span>} 
+           </span>
         </div>
+        
         <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button 
                 className="btn-icon" 
                 title="设置持仓"
-                onClick={onEditHoldings}
+                onClick={(e) => {
+                    e.stopPropagation(); // Stop propagation to avoid card click
+                    onEditHoldings(e);
+                }}
             >
                <span style={{ fontSize: '0.8rem', color: shares > 0 ? 'var(--color-accent)' : 'var(--text-secondary)' }}>
                  {shares > 0 ? `市值¥${(shares * currentPrice).toFixed(0)}` : '设置持仓'}
@@ -40,13 +79,12 @@ const FundCard = ({ data, holdings, onDelete, onClick, onEditHoldings }) => {
                     e.stopPropagation();
                     onDelete(data.code);
                 }}
-            > {/* New delete button structure */}
+            > 
               <Trash2 size={18} />
             </button>
         </div>
       </div>
 
-      {/* The growth badge is now outside the card-header, but still within the main card div */}
       <div className={`badge ${growthClass}`}>
           <GrowthIcon size={16} style={{marginRight: '0.25rem'}} />
           <span>
