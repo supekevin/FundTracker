@@ -57,7 +57,11 @@ const Dashboard = () => {
 
   // 自动刷新，每 20 秒
   useEffect(() => {
-    const interval = setInterval(updateAll, 20000); // 20 秒刷新
+    const interval = setInterval(() => {
+        if (!document.hidden) {
+            updateAll();
+        }
+    }, 20000); // 20 秒刷新
     return () => clearInterval(interval);
   }, [codes]); // 如果 codes 改变则重新绑定 (尽管如果 updateAll 定义在 generic effect 内部使用当前状态闭包，这里我们依赖 codes)
 
